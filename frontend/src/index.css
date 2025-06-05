@@ -1,0 +1,50 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  @font-face {
+    font-family: 'Paperlogy';
+    src: url('/fonts/Paperlogy-4Regular.ttf') format('truetype');
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+  }
+
+  @font-face {
+    font-family: 'Paperlogy';
+    src: url('/fonts/Paperlogy-6SemiBold.ttf') format('truetype');
+    font-weight: 600;
+    font-style: normal;
+    font-display: swap;
+  }
+
+  /* 전체 html, body 배경색 설정 */
+  html,
+  body,
+  #root {
+    min-height: 100vh;
+    background-color: #f6e6c5;
+    padding: 0;
+    font-size: 14px;
+  }
+
+  /* 스크롤바 스타일 */
+  ::-webkit-scrollbar {
+    width: 3px;
+    height: 4px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background-color: rgba(112, 112, 107, 0.5);
+    border-radius: 40px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(59, 61, 57, 0.8);
+  }
+}

@@ -1,0 +1,85 @@
+# Web Framework
+fastapi>=0.110
+uvicorn>=0.29
+pydantic==2.10.6
+
+# Server Connection
+requests>=2.31 # HTTP requests
+aiohttp>=3.8.0 # Async HTTP
+python-dotenv==1.0.0
+
+# Deep Learning Framework
+torch>=2.1
+torchvision>=0.16
+timm>=0.9.12 # MiDaS models
+
+# Computer Vision
+opencv-python-headless>=4.8 # For Docker
+Pillow>=10.0.0 # PIL for image processing
+
+# Data Processing
+numpy>=1.24
+pandas>=2.0
+matplotlib>=3.7.0
+onnxruntime>=1.14.0
+onnx>=1.14.1
+
+# Cloud Storage
+boto3>=1.34.0 # AWS S3
+aiobotocore>=2.7 # Async S3
+
+# Logging
+pyyaml>=6.0
+loguru>=0.6.0
+
+# -------------------------------------------------------------------
+
+#### Food Recog ####
+
+# Deep Learning Framework
+torch>=2.1
+torchvision>=0.16
+
+# Object Detection (YOLOv8)
+ultralytics>=8.0.166
+
+# Computer Vision
+opencv-python>=4.8
+opencv-contrib-python>=4.8 # ArUco marker, Stereo Vision
+# opencv-python-headless>=4.8 # For Docker
+
+# DB connection
+boto3>=1.34.0 # S3
+aiobotocore>=2.7 # optional, for async S3 access
+
+# Monocular Depth Estimation(MiDas/DPT)
+timm>=0.9.12 # timm models
+
+# data processing
+numpy>=1.24
+pandas>=2.0
+
+
+# -------------------------------------------------------------------
+
+#### AGENT LLM ####
+
+# Language Model Framework
+langchain>=0.0.268
+langchain-community>=0.0.20
+langgraph>=0.1.0
+langchain-openai>=0.0.8
+
+# LLM API Clients
+openai>=0.27.6
+anthropic>=0.4.0
+
+# DB connection
+SQLAlchemy>=2.0.20
+PyMySQL>=1.0.3
+## PostgreSQL + pgvector
+# psycopg2-binary>=2.9.6
+# pgvector>=0.7.0
+
+
+# -------------------------------------------------------------------

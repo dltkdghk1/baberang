@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>WEBCAM</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      @font-face {
+        font-family: "CustomFont";
+        src: url("{{ url_for("static", filename="fonts/Paperlogy-4Regular.ttf") }}")
+          format("truetype");
+        font-weight: normal;
+        font-style: normal;
+      }
+
+      .font-custom {
+        font-family: "CustomFont", sans-serif;
+      }
+
+      .spinner-container {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.3);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+        visibility: hidden;
+      }
+
+      .spinner {
+        width: 120px;
+        height: 120px;
+        border: 16px solid #f3f3f3;
+        border-top: 16px solid #96c059;
+        border-radius: 50%;
+        animation: spin 1.5s linear infinite;
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div
+      class="min-h-screen w-full"
+      style="
+        background-image: url('{{ url_for('static', filename='image/background/background_main.png') }}');
+        background-size: cover;
+        background-position: center;
+      "
+    >
+      {% if error %}
+      <div
+        class="fixed top-4 right-4 bg-red-500 text-white px-4 py-2 rounded-md z-50"
+      >
+        {{ error }}
+      </div>
+      {% endif %}
+
+      <div id="loading-spinner" class="spinner-container">
+        <div class="spinner"></div>
+      </div>
+
+      <div
+        class="flex justify-center items-center"
+        style="padding-top: 75px; height: calc(100vh - 60px)"
+      >
+        <div
+          class="flex w-full max-w-none p-0 gap-1 justify-center items-center"
+        >
+          <!-- 왼쪽: 학생 정보 표시 영역 -->
+          <div
+            class="w-1/3 bg-opacity-80 rounded-xl p-2 flex flex-col items-center justify-center -ml-[250px]"
+          >
+            <div class="mb-6 mt-4">
+              <img
+                id="student-icon"
+                src="{% if studentInfo.isTagged %}
+                       {% if studentInfo.gender == 'female' %}
+                         {{ url_for('static', filename='image/student/girl.png') }}
+                       {% else %}
+                         {{ url_for('static', filename='image/student/boy.png') }}
+                       {% endif %}
+                     {% else %}
+                       {{ url_for('static', filename='image/student/blank.png') }}
+                     {% endif %}"
+                alt="학생 아이콘"
+                class="w-[450px] h-[450px] object-contain"
+              />
+            </div>
+
+            <div class="text-center mt-4">
+              <h2 class="student-name text-[3.2rem] font-bold mb-2 font-custom">
+                {% if studentInfo.isTagged %} {{ studentInfo.name }}님! {% else
+                %} 학생증을 인식시켜주세요 {% endif %}
+              </h2>
+              <p
+                id="student-msg"
+                class="student-msg text-[3.75rem] font-bold font-custom"
+              >
+                {% if studentInfo.isTagged %}식판을 인식해주세요{% endif %}
+              </p>
+            </div>
+          </div>
+
+          <!-- 오른쪽: 카메라 스트림 표시 영역 -->
+          <div
+            class="w-[1280px] h-[960px] flex-none bg-white bg-opacity-80 rounded-3xl overflow-hidden shadow-md flex items-center justify-center"
+          >
+            <img
+              src="{{ url_for('video_feed') }}"
+              class="w-full h-full object-covwe"
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        const nameEl = document.querySelector(".student-name");
+        const msgEl = document.getElementById("student-msg");
+        const spinnerEl = document.getElementById("loading-spinner");
+        let lastPk = null;
+        let detectionRunning = false;
+        let name = "";
+
+        // 1) 학생증/NFC 폴링
+        async function pollNfc() {
+          try {
+            const res = await fetch("/nfc-info");
+            const data = await res.json();
+
+            if (data.isTagged && data.pk !== lastPk) {
+              lastPk = data.pk;
+              nameEl.textContent = data.name + "님!";
+              msgEl.textContent = "식판을 인식해주세요";
+              document.getElementById("student-icon").src =
+                data.gender === "female"
+                  ? '{{ url_for("static", filename="image/student/girl.png") }}'
+                  : '{{ url_for("static", filename="image/student/boy.png") }}';
+              name = data.name;
+            } else if (!data.isTagged && lastPk !== null) {
+              lastPk = null;
+              nameEl.textContent = "학생증을 인식시켜주세요";
+              msgEl.textContent = "";
+              document.getElementById("student-icon").src =
+                '{{ url_for("static", filename="image/student/blank.png") }}';
+            }
+          } catch {
+            // error
+          }
+        }
+
+        // 2) 식판 검출 성공 폴링
+        async function pollDetection() {
+          try {
+            const res = await fetch("/detection-status");
+            if (!res.ok) return;
+            const { detected, processing, status } = await res.json();
+
+            if (processing) {
+              spinnerEl.style.visibility = "visible";
+              // 여기서 텍스트를 변경하지 않음 - 기존 텍스트 유지
+            } else {
+              spinnerEl.style.visibility = "hidden";
+            }
+
+            if (detected && !detectionRunning) {
+              detectionRunning = true;
+              // 인식완료 표시
+              nameEl.innerHTML = `
+              <span class="text-blue-500 mr-2 text-[3.2rem]">✅</span>인식완료!`;
+
+              if (status == "식전") {
+                msgEl.textContent = "식사 맛있게 하세요!";
+              } else {
+                msgEl.textContent = "좋은 하루 되세요!";
+              }
+
+              // 3초 뒤 복원
+              setTimeout(() => {
+                detectionRunning = false;
+                if (lastPk) {
+                  nameEl.textContent = name + "님!";
+                  msgEl.textContent = "식판을 인식해주세요";
+                } else {
+                  nameEl.textContent = "학생증을 인식시켜주세요";
+                  msgEl.textContent = "";
+                }
+              }, 3000);
+            }
+          } catch {
+            // error
+          }
+        }
+
+        // 각 폴링 시작
+        pollNfc();
+        setInterval(pollNfc, 1000);
+
+        pollDetection();
+        setInterval(pollDetection, 1000);
+      });
+    </script>
+  </body>
+</html>
